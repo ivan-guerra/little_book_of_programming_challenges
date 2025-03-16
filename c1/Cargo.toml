@@ -1,0 +1,11 @@
+[package]
+name = "c1"
+version = "0.1.0"
+edition = "2021"
+description = "Challenge #1"
+license = "Unlicense"
+
+[dependencies]
+colored = "3.0.0"
+rand = "0.9.0"
+once_cell = "1.21.1"
