@@ -91,6 +91,13 @@ fn get_random_color() -> colored::Color {
         colored::Color::Magenta,
         colored::Color::Cyan,
         colored::Color::White,
+        colored::Color::BrightRed,
+        colored::Color::BrightGreen,
+        colored::Color::BrightYellow,
+        colored::Color::BrightBlue,
+        colored::Color::BrightMagenta,
+        colored::Color::BrightCyan,
+        colored::Color::BrightWhite,
     ];
     let mut rng = rand::rng();
     *colors.choose(&mut rng).unwrap_or(&colored::Color::White)
