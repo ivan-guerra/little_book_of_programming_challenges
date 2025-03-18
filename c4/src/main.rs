@@ -1,3 +1,13 @@
+//! A speed and distance calculator that provides interactive calculations for:
+//!
+//! - Distance (given speed and time)
+//! - Speed (given distance and time)
+//!
+//! # Usage
+//!
+//! The program prompts the user to:
+//! 1. Select calculation type (distance or speed)
+//! 2. Input required parameters (speed/distance and time)
 use std::io::Write;
 
 #[derive(Debug, PartialEq)]
@@ -28,46 +38,44 @@ fn calculate_query(query: &Query) -> CalculationResult {
     }
 }
 
-fn prompt_for_query() -> Result<Query, Box<dyn std::error::Error>> {
+fn read_input<R: std::io::BufRead>(reader: &mut R) -> Result<String, std::io::Error> {
+    let mut input = String::new();
+    reader.read_line(&mut input)?;
+    Ok(input.trim().to_string())
+}
+
+fn prompt_for_param<R: std::io::BufRead>(
+    reader: &mut R,
+    param_name: &str,
+) -> Result<f64, Box<dyn std::error::Error>> {
+    print!("Enter {}: ", param_name);
+    std::io::stdout().flush()?;
+    let input = read_input(reader)?;
+
+    let value = input.parse()?;
+    if value <= 0.0 {
+        return Err(format!(" {param_name} must be positive").into());
+    }
+
+    Ok(value)
+}
+
+fn prompt_for_query<R: std::io::BufRead>(
+    reader: &mut R,
+) -> Result<Query, Box<dyn std::error::Error>> {
     print!("Enter query type (1:distance, 2:speed): ");
     std::io::stdout().flush()?;
+    let query_type = read_input(reader)?;
 
-    let validate_time = |time: f64| -> Result<(), String> {
-        if time <= 0.0 {
-            Err("Time must be positive".to_string())
-        } else {
-            Ok(())
-        }
-    };
-    let validate_speed = |time: f64| -> Result<(), String> {
-        if time < 0.0 {
-            Err("Speed cannot be negative".to_string())
-        } else {
-            Ok(())
-        }
-    };
-    let validate_distance = |distance: f64| -> Result<(), String> {
-        if distance < 0.0 {
-            Err("Distance cannot be negative".to_string())
-        } else {
-            Ok(())
-        }
-    };
-
-    let query_type = read_input()?;
     match query_type.as_str() {
         "1" => {
-            let speed_mph = prompt_number("Enter speed (mph): ")?;
-            validate_speed(speed_mph)?;
-            let time_hr = prompt_number("Enter time (hours): ")?;
-            validate_time(time_hr)?;
+            let speed_mph = prompt_for_param(reader, "speed (mph)")?;
+            let time_hr = prompt_for_param(reader, "time (hours)")?;
             Ok(Query::Distance { speed_mph, time_hr })
         }
         "2" => {
-            let distance_miles = prompt_number("Enter distance (miles): ")?;
-            validate_distance(distance_miles)?;
-            let time_hr = prompt_number("Enter time (hours): ")?;
-            validate_time(time_hr)?;
+            let distance_miles = prompt_for_param(reader, "distance (miles)")?;
+            let time_hr = prompt_for_param(reader, "time (hours)")?;
             Ok(Query::Speed {
                 distance_miles,
                 time_hr,
@@ -77,89 +85,188 @@ fn prompt_for_query() -> Result<Query, Box<dyn std::error::Error>> {
     }
 }
 
-fn read_input() -> Result<String, std::io::Error> {
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input)?;
-    Ok(input.trim().to_string())
-}
-
-fn prompt_number(prompt: &str) -> Result<f64, Box<dyn std::error::Error>> {
-    print!("{}", prompt);
-    std::io::stdout().flush()?;
-    let input = read_input()?;
-    Ok(input.parse()?)
-}
-
 fn main() {
-    let query = prompt_for_query().unwrap_or_else(|e| {
+    let mut stdin = std::io::BufReader::new(std::io::stdin());
+    let query = prompt_for_query(&mut stdin).unwrap_or_else(|e| {
         eprintln!("Error: {}", e);
         std::process::exit(1);
     });
 
     let result = calculate_query(&query);
-    println!(
-        "{}: {:.2} {}",
-        get_result_label(&query),
-        result.value,
-        result.unit
-    );
-}
-
-fn get_result_label(query: &Query) -> &'static str {
-    match query {
+    let metric_type = match query {
         Query::Distance { .. } => "Distance",
         Query::Speed { .. } => "Speed",
-    }
+    };
+    println!("{}: {:.2} {}", metric_type, result.value, result.unit);
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::BufReader;
 
     #[test]
-    fn when_speed_is_60mph_for_2hours_distance_is_120miles() {
+    fn calculate_query_computes_distance() {
         let query = Query::Distance {
             speed_mph: 60.0,
             time_hr: 2.0,
         };
+
         let result = calculate_query(&query);
-        assert_eq!(
-            result,
-            CalculationResult {
-                value: 120.0,
-                unit: "miles".to_string()
-            }
-        );
+
+        assert_eq!(result.value, 120.0);
+        assert_eq!(result.unit, "miles");
     }
 
     #[test]
-    fn when_traveling_120miles_in_2hours_speed_is_60mph() {
+    fn calculate_query_computes_speed() {
         let query = Query::Speed {
             distance_miles: 120.0,
             time_hr: 2.0,
         };
+
         let result = calculate_query(&query);
+
+        assert_eq!(result.value, 60.0);
+        assert_eq!(result.unit, "mph");
+    }
+
+    #[test]
+    fn calculate_query_handles_zero_time() {
+        let query = Query::Speed {
+            distance_miles: 100.0,
+            time_hr: 0.0,
+        };
+
+        let result = calculate_query(&query);
+
+        assert!(result.value.is_infinite());
+        assert_eq!(result.unit, "mph");
+    }
+
+    #[test]
+    fn calculate_query_handles_zero_distance() {
+        let query = Query::Speed {
+            distance_miles: 0.0,
+            time_hr: 2.0,
+        };
+
+        let result = calculate_query(&query);
+
+        assert_eq!(result.value, 0.0);
+        assert_eq!(result.unit, "mph");
+    }
+
+    #[test]
+    fn calculate_query_handles_fractional_values() {
+        let query = Query::Distance {
+            speed_mph: 0.5,
+            time_hr: 0.5,
+        };
+
+        let result = calculate_query(&query);
+
+        assert_eq!(result.value, 0.25);
+        assert_eq!(result.unit, "miles");
+    }
+
+    #[test]
+    fn prompt_for_param_accepts_valid_positive_number() {
+        let input = "42.5\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_param(&mut reader, "test_param");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 42.5);
+    }
+
+    #[test]
+    fn prompt_for_param_rejects_negative_number() {
+        let input = "-5.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_param(&mut reader, "test_param");
+        assert!(result.is_err());
         assert_eq!(
-            result,
-            CalculationResult {
-                value: 60.0,
-                unit: "mph".to_string()
-            }
+            result.unwrap_err().to_string(),
+            " test_param must be positive"
         );
     }
 
     #[test]
-    fn when_querying_labels_distance_and_speed_queries_return_correct_text() {
-        let distance_query = Query::Distance {
-            speed_mph: 60.0,
-            time_hr: 2.0,
-        };
-        let speed_query = Query::Speed {
-            distance_miles: 120.0,
-            time_hr: 2.0,
-        };
+    fn prompt_for_param_rejects_zero() {
+        let input = "0.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_param(&mut reader, "test_param");
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            " test_param must be positive"
+        );
+    }
 
-        assert_eq!(get_result_label(&distance_query), "Distance");
-        assert_eq!(get_result_label(&speed_query), "Speed");
+    #[test]
+    fn prompt_for_param_rejects_non_numeric_input() {
+        let input = "not_a_number\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_param(&mut reader, "test_param");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn prompt_for_query_handles_distance_query() {
+        let input = "1\n10.0\n2.5\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_query(&mut reader).unwrap();
+        match result {
+            Query::Distance { speed_mph, time_hr } => {
+                assert_eq!(speed_mph, 10.0);
+                assert_eq!(time_hr, 2.5);
+            }
+            _ => panic!("Expected Distance query"),
+        }
+    }
+
+    #[test]
+    fn prompt_for_query_handles_speed_query() {
+        let input = "2\n100.0\n2.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_query(&mut reader).unwrap();
+        match result {
+            Query::Speed {
+                distance_miles,
+                time_hr,
+            } => {
+                assert_eq!(distance_miles, 100.0);
+                assert_eq!(time_hr, 2.0);
+            }
+            _ => panic!("Expected Speed query"),
+        }
+    }
+
+    #[test]
+    fn prompt_for_query_rejects_invalid_query_type() {
+        let input = "3\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_query(&mut reader);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Invalid input. Please enter 1 or 2."
+        );
+    }
+
+    #[test]
+    fn prompt_for_query_rejects_invalid_numeric_input() {
+        let input = "1\nabc\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_query(&mut reader);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn prompt_for_query_rejects_negative_values() {
+        let input = "1\n-10.0\n2.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_query(&mut reader);
+        assert!(result.is_err());
     }
 }

@@ -1,3 +1,11 @@
+//! A simple joke-telling program that presents random jokes with colorful answers.
+//!
+//! This program selects a random joke from a predefined collection, displays the
+//! question, waits for user input (Enter key), and then shows the answer in a
+//! random color.
+//!
+//! The jokes are child-friendly and sourced from an educational [blog](https://childrenlearningenglishaffectively.blogspot.com/2013/05/50-easy-jokes-for-young-english-learners.html) for
+//! English learners.
 use colored::Colorize;
 use once_cell::sync::Lazy;
 use rand::seq::IndexedRandom;
@@ -5,8 +13,6 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::io::Write;
 
-// Jokes taken from:
-// https://childrenlearningenglishaffectively.blogspot.com/2013/05/50-easy-jokes-for-young-english-learners.html
 static JOKES: Lazy<HashMap<&str, &str>> = Lazy::new(|| {
     let mut m = HashMap::new();
     m.insert(
@@ -83,24 +89,26 @@ static JOKES: Lazy<HashMap<&str, &str>> = Lazy::new(|| {
 });
 
 fn get_random_color() -> colored::Color {
-    let colors = [
-        colored::Color::Red,
-        colored::Color::Green,
-        colored::Color::Yellow,
-        colored::Color::Blue,
-        colored::Color::Magenta,
-        colored::Color::Cyan,
-        colored::Color::White,
-        colored::Color::BrightRed,
-        colored::Color::BrightGreen,
-        colored::Color::BrightYellow,
-        colored::Color::BrightBlue,
-        colored::Color::BrightMagenta,
-        colored::Color::BrightCyan,
-        colored::Color::BrightWhite,
+    use colored::Color;
+
+    static COLORS: [colored::Color; 14] = [
+        Color::Red,
+        Color::Green,
+        Color::Yellow,
+        Color::Blue,
+        Color::Magenta,
+        Color::Cyan,
+        Color::White,
+        Color::BrightRed,
+        Color::BrightGreen,
+        Color::BrightYellow,
+        Color::BrightBlue,
+        Color::BrightMagenta,
+        Color::BrightCyan,
+        Color::BrightWhite,
     ];
     let mut rng = rand::rng();
-    *colors.choose(&mut rng).unwrap_or(&colored::Color::White)
+    *COLORS.choose(&mut rng).unwrap_or(&Color::White)
 }
 
 fn main() -> std::io::Result<()> {

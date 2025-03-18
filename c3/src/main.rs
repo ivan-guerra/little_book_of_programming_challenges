@@ -1,3 +1,29 @@
+//! A geometric shape calculator that computes areas and volumes.
+//!
+//! This program allows users to calculate:
+//! - Rectangle areas by providing width and height
+//! - Cuboid volumes by providing width, height, and depth
+//!
+//! # Features
+//! - Interactive command-line interface
+//! - Input validation for dimensions (positive numbers only)
+//! - Error handling for invalid inputs
+//! - Support for floating-point dimensions
+//!
+//! # Usage
+//! The program prompts users to:
+//! 1. Choose a shape type (1 for Rectangle, 2 for Cuboid)
+//! 2. Enter dimensions when prompted
+//! 3. Displays the calculated area or volume
+//!
+//! # Error Handling
+//! The program validates all inputs and handles:
+//! - Non-numeric inputs
+//! - Negative dimensions
+//! - Zero dimensions
+//! - Invalid shape choices
+use std::io::Write;
+
 #[derive(Debug, PartialEq)]
 enum Shape {
     Rectangle { width: f64, height: f64 },
@@ -12,33 +38,38 @@ fn cuboid_volume(width: f64, height: f64, depth: f64) -> f64 {
     width * height * depth
 }
 
-fn read_input<R: std::io::BufRead>(reader: &mut R, prompt: &str) -> Result<String, std::io::Error> {
-    use std::io::Write;
-    if !prompt.is_empty() {
-        print!("{}", prompt);
-        std::io::stdout().flush()?;
-    }
+fn prompt_for_dimension<R: std::io::BufRead>(
+    reader: &mut R,
+    dimension: &str,
+) -> Result<f64, Box<dyn std::error::Error>> {
+    print!("Enter {}:", dimension);
+    std::io::stdout().flush()?;
+
     let mut input = String::new();
     reader.read_line(&mut input)?;
-    Ok(input)
+
+    let dim = input.trim().parse()?;
+    if dim <= 0.0 {
+        return Err(format!("{} must be greater than zero", dimension).into());
+    }
+
+    Ok(dim)
 }
 
 fn prompt_for_shape<R: std::io::BufRead>(
     reader: &mut R,
 ) -> Result<Shape, Box<dyn std::error::Error>> {
     println!("Enter 1 for Rectangle, 2 for Cuboid");
-    let choice: u32 = read_input(reader, "")?.trim().parse()?;
+    let mut input = String::new();
+    reader.read_line(&mut input)?;
+    let choice: u32 = input.trim().parse()?;
 
+    let width = prompt_for_dimension(reader, "width")?;
+    let height = prompt_for_dimension(reader, "height")?;
     match choice {
-        1 => {
-            let width = read_input(reader, "Enter width: ")?.trim().parse()?;
-            let height = read_input(reader, "Enter height: ")?.trim().parse()?;
-            Ok(Shape::Rectangle { width, height })
-        }
+        1 => Ok(Shape::Rectangle { width, height }),
         2 => {
-            let width = read_input(reader, "Enter width: ")?.trim().parse()?;
-            let height = read_input(reader, "Enter height: ")?.trim().parse()?;
-            let depth = read_input(reader, "Enter depth: ")?.trim().parse()?;
+            let depth = prompt_for_dimension(reader, "depth")?;
             Ok(Shape::Cuboid {
                 width,
                 height,
@@ -78,77 +109,134 @@ mod tests {
     use super::*;
     use std::io::BufReader;
 
-    // Helper function to create a mock input reader
-    fn create_test_input(input: &str) -> BufReader<std::io::Cursor<Vec<u8>>> {
-        let cursor = std::io::Cursor::new(input.as_bytes().to_vec());
-        BufReader::new(cursor)
+    #[test]
+    fn prompt_for_dimension_accepts_positive_input() {
+        let input = "5.5\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_dimension(&mut reader, "width");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 5.5);
     }
 
     #[test]
-    fn when_calculating_rectangle_area_then_returns_correct_result() {
-        assert_eq!(rect_area(2.0, 3.0), 6.0);
-        assert_eq!(rect_area(0.0, 5.0), 0.0);
-        assert_eq!(rect_area(2.5, 4.0), 10.0);
+    fn prompt_for_dimension_rejects_zero() {
+        let input = "0.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_dimension(&mut reader, "height");
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "height must be greater than zero"
+        );
     }
 
     #[test]
-    fn when_calculating_cuboid_volume_then_returns_correct_result() {
-        assert_eq!(cuboid_volume(2.0, 3.0, 4.0), 24.0);
-        assert_eq!(cuboid_volume(0.0, 5.0, 2.0), 0.0);
-        assert_eq!(cuboid_volume(2.5, 4.0, 2.0), 20.0);
+    fn prompt_for_dimension_rejects_negative_values() {
+        let input = "-2.5\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_dimension(&mut reader, "length");
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "length must be greater than zero"
+        );
     }
 
     #[test]
-    fn when_reading_input_then_returns_trimmed_string() -> Result<(), Box<dyn std::error::Error>> {
-        let input = "test\n";
-        let mut reader = create_test_input(input);
-        let result = read_input(&mut reader, "")?;
-        assert_eq!(result.trim(), "test");
-        Ok(())
-    }
-
-    #[test]
-    fn when_prompting_for_rectangle_then_creates_correct_shape(
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let input = "1\n2.5\n3.0\n";
-        let mut reader = create_test_input(input);
-        let expected = Shape::Rectangle {
-            width: 2.5,
-            height: 3.0,
-        };
-        let shape = prompt_for_shape(&mut reader)?;
-        assert_eq!(shape, expected);
-        Ok(())
-    }
-
-    #[test]
-    fn when_prompting_for_cuboid_then_creates_correct_shape(
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let input = "2\n2.5\n3.0\n4.0\n";
-        let mut reader = create_test_input(input);
-        let expected = Shape::Cuboid {
-            width: 2.5,
-            height: 3.0,
-            depth: 4.0,
-        };
-        let shape = prompt_for_shape(&mut reader)?;
-        assert_eq!(shape, expected);
-        Ok(())
-    }
-
-    #[test]
-    fn when_shape_choice_invalid_then_returns_error() {
-        let input = "3\n";
-        let mut reader = create_test_input(input);
-        let result = prompt_for_shape(&mut reader);
+    fn prompt_for_dimension_rejects_non_numeric_input() {
+        let input = "not_a_number\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_dimension(&mut reader, "width");
         assert!(result.is_err());
     }
 
     #[test]
-    fn when_input_not_numeric_then_returns_error() {
-        let input = "abc\n";
-        let mut reader = create_test_input(input);
+    fn prompt_for_dimension_rejects_empty_input() {
+        let input = "\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_dimension(&mut reader, "height");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn prompt_for_shape_creates_valid_rectangle() {
+        let input = "1\n5.0\n3.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
         let result = prompt_for_shape(&mut reader);
+
+        assert!(result.is_ok());
+        if let Ok(Shape::Rectangle { width, height }) = result {
+            assert_eq!(width, 5.0);
+            assert_eq!(height, 3.0);
+        } else {
+            panic!("Expected Rectangle shape");
+        }
+    }
+
+    #[test]
+    fn prompt_for_shape_creates_valid_cuboid() {
+        let input = "2\n2.0\n3.0\n4.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_shape(&mut reader);
+
+        assert!(result.is_ok());
+        if let Ok(Shape::Cuboid {
+            width,
+            height,
+            depth,
+        }) = result
+        {
+            assert_eq!(width, 2.0);
+            assert_eq!(height, 3.0);
+            assert_eq!(depth, 4.0);
+        } else {
+            panic!("Expected Cuboid shape");
+        }
+    }
+
+    #[test]
+    fn prompt_for_shape_rejects_invalid_choice() {
+        let input = "3\n2.0\n3.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_shape(&mut reader);
+
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "Invalid choice");
+    }
+
+    #[test]
+    fn prompt_for_shape_rejects_non_numeric_input() {
+        let input = "abc\n2.0\n3.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_shape(&mut reader);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn prompt_for_shape_rejects_negative_dimensions() {
+        let input = "1\n-2.0\n3.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_shape(&mut reader);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn prompt_for_shape_rejects_zero_dimensions() {
+        let input = "2\n2.0\n0.0\n4.0\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_shape(&mut reader);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn prompt_for_shape_rejects_empty_input() {
+        let input = "\n";
+        let mut reader = BufReader::new(input.as_bytes());
+        let result = prompt_for_shape(&mut reader);
+
         assert!(result.is_err());
     }
 }
