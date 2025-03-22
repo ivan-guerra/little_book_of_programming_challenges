@@ -1,5 +1,5 @@
 [workspace]
 members = [
-  "c1", "c10", "c11", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9",
+  "challenges/c1", "challenges/c10", "challenges/c11", "challenges/c2", "challenges/c3", "challenges/c4", "challenges/c5", "challenges/c6", "challenges/c7", "challenges/c8", "challenges/c9",
 ]
 resolver = "2"
