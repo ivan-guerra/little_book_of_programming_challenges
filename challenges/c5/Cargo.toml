@@ -2,6 +2,7 @@
 name = "c5"
 version = "0.1.0"
 edition = "2021"
+description = "Challenge #5"
 
 [dependencies]
 chrono = "0.4.40"

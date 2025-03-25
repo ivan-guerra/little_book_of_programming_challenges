@@ -2,6 +2,7 @@
 name = "c14"
 version = "0.1.0"
 edition = "2021"
+description = "Challenge #14"
 
 [dependencies]
 rand = "0.9.0"

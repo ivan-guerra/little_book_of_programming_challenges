@@ -2,6 +2,7 @@
 name = "c12"
 version = "0.1.0"
 edition = "2021"
+description = "Challenge #12"
 
 [dependencies]
 primal = "0.3.3"

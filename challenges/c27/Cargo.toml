@@ -2,6 +2,7 @@
 name = "c27"
 version = "0.1.0"
 edition = "2021"
+description = "Challenge #27"
 
 [dependencies]
 rpassword = "7.3.1"
