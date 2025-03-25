@@ -1,5 +1,5 @@
 [workspace]
 members = [
-  "challenges/c1", "challenges/c10", "challenges/c11", "challenges/c12", "challenges/c13", "challenges/c14", "challenges/c15", "challenges/c16", "challenges/c17", "challenges/c18", "challenges/c19", "challenges/c2", "challenges/c20", "challenges/c21", "challenges/c22", "challenges/c23", "challenges/c24", "challenges/c25", "challenges/c26", "challenges/c3", "challenges/c4", "challenges/c5", "challenges/c6", "challenges/c7", "challenges/c8", "challenges/c9",
+  "challenges/c1", "challenges/c10", "challenges/c11", "challenges/c12", "challenges/c13", "challenges/c14", "challenges/c15", "challenges/c16", "challenges/c17", "challenges/c18", "challenges/c19", "challenges/c2", "challenges/c20", "challenges/c21", "challenges/c22", "challenges/c23", "challenges/c24", "challenges/c25", "challenges/c26", "challenges/c27", "challenges/c3", "challenges/c4", "challenges/c5", "challenges/c6", "challenges/c7", "challenges/c8", "challenges/c9",
 ]
 resolver = "2"
