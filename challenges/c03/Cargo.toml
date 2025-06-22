@@ -1,5 +1,5 @@
 [package]
-name = "c3"
+name = "c03"
 version = "0.1.0"
 edition = "2021"
 description = "Challenge #3"

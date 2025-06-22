@@ -1,8 +1,8 @@
 [package]
-name = "c9"
+name = "c08"
 version = "0.1.0"
 edition = "2021"
-description = "Challenge #9"
+description = "Challenge #8"
 
 [dependencies]
-rand = "0.9.0"
+chrono = "0.4.40"

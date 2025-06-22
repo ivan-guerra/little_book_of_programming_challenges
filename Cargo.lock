@@ -36,11 +36,52 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1628fb46dfa0b37568d12e5edd512553eccf6a22a78e8bde00bb4aed84d5bdbf"
 
 [[package]]
-name = "c1"
+name = "c01"
 version = "0.1.0"
 dependencies = [
  "colored",
  "once_cell",
+ "rand",
+]
+
+[[package]]
+name = "c02"
+version = "0.1.0"
+
+[[package]]
+name = "c03"
+version = "0.1.0"
+
+[[package]]
+name = "c04"
+version = "0.1.0"
+
+[[package]]
+name = "c05"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+]
+
+[[package]]
+name = "c06"
+version = "0.1.0"
+
+[[package]]
+name = "c07"
+version = "0.1.0"
+
+[[package]]
+name = "c08"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+]
+
+[[package]]
+name = "c09"
+version = "0.1.0"
+dependencies = [
  "rand",
 ]
 
@@ -100,10 +141,6 @@ name = "c19"
 version = "0.1.0"
 
 [[package]]
-name = "c2"
-version = "0.1.0"
-
-[[package]]
 name = "c20"
 version = "0.1.0"
 
@@ -149,43 +186,6 @@ name = "c27"
 version = "0.1.0"
 dependencies = [
  "rpassword",
-]
-
-[[package]]
-name = "c3"
-version = "0.1.0"
-
-[[package]]
-name = "c4"
-version = "0.1.0"
-
-[[package]]
-name = "c5"
-version = "0.1.0"
-dependencies = [
- "chrono",
-]
-
-[[package]]
-name = "c6"
-version = "0.1.0"
-
-[[package]]
-name = "c7"
-version = "0.1.0"
-
-[[package]]
-name = "c8"
-version = "0.1.0"
-dependencies = [
- "chrono",
-]
-
-[[package]]
-name = "c9"
-version = "0.1.0"
-dependencies = [
- "rand",
 ]
 
 [[package]]

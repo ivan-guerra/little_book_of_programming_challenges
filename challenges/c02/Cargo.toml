@@ -1,7 +1,7 @@
 [package]
-name = "c7"
+name = "c02"
 version = "0.1.0"
 edition = "2021"
-description = "Challenge #7"
+description = "Challenge #2"
 
 [dependencies]
